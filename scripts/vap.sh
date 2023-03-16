@@ -1,7 +1,5 @@
 #!/bin/bash
 
-OPENSTACK="/opt/jelastic-python311/bin/openstack --insecure"
-
 SUCCESS_CODE=0
 VALIDATION_ERROR_CODE=100
 FAIL_CODE=99
@@ -27,6 +25,9 @@ MIN_INFRA_VCPU=1
 MIN_INFRA_RAM=1
 MIN_USER_VCPU=1
 MIN_USER_RAM=4
+
+OPENSTACK=$(command -v openstack) && OPENSTACK="openstack --insecure" || OPENSTACK="/opt/jelastic-python311/bin/openstack --insecure"
+command -v $OPENSTACK || { echo "openstack command not found"; exit 1; }
 
 [[ -f "/var/log/installer.log" ]] && RUN_LOG="/var/log/installer.log"
 
