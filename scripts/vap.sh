@@ -196,23 +196,15 @@ getSubnets(){
   local id=0
   local subnets=$(jq -n '[]')
   source ${VAP_ENVS}
-  for i in $(${OPENSTACK} network list -f value -c Name); do
-    [[ "$(${OPENSTACK} network show $i -f value -c provider:network_type)" == "flat" ]] && {
-      for subnet in $(${OPENSTACK} network show $i -f json -c subnets | jq -r .subnets[]); do
-        detail_subnet="$(${OPENSTACK} subnet show $subnet -f json)"
-        subnet_name="$(echo $detail_subnet | jq -r .name)"
-        cidr="$(echo $detail_subnet | jq -r .cidr)"
-        grep -qE "(^127\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^192\.168\.)|(^169\.254)" <<< $cidr || {
+
+  for subnet in $(${OPENSTACK} subnet list -f value -c Subnet); do
+        grep -qE "(^127\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^192\.168\.)|(^169\.254)" <<< $subnet || {
           id=$((id+1))
           subnets=$(echo $subnets | jq \
             --argjson id "$id" \
-            --arg Name "$subnet_name" \
-            --arg Network "$subnet" \
-            --arg Subnet "$cidr" \
-          '. += [{"id": $id, "Name": $Name, "Network": $Network, "Subnet": $Subnet}]')
+            --arg Subnet "$subnet" \
+          '. += [{"id": $id, "Subnet": $Subnet}]')
         }
-      done
-    }
   done
 
   local output="{\"result\": 0, \"subnets\": ${subnets}}"
@@ -221,12 +213,12 @@ getSubnets(){
   if [[ "x${FORMAT}" == "xjson" ]]; then
     log "Getting subnets...done";
   else
-    seperator=---------------------------------------------------------------------------------------------------
-    rows="%-5s| %-20s| %-50s| %s\n"
-    TableWidth=100
+    seperator=------------------------------------------------
+    rows="%-5s| %s\n"
+    TableWidth=30
     echo -e "\n\nVHI Cluster Subnets"
     printf "%.${TableWidth}s\n" "$seperator"
-    printf "%-5s| %-20s| %-50s| %s\n" ID Name Network Subnet
+    printf "%-5s| %s\n" ID Subnet
     printf "%.${TableWidth}s\n" "$seperator"
 
     for row in $(echo "${subnets}" | jq -r '.[] | @base64'); do
@@ -234,10 +226,8 @@ getSubnets(){
         echo "${row}" | base64 --decode | jq -r "${1}"
       }
       id=$(_jq '.id')
-      Name=$(_jq '.Name')
-      Network=$(_jq '.Network')
       Subnet=$(_jq '.Subnet')
-      printf "$rows" "$id" "$Name" "$Network" "$Subnet"
+      printf "$rows" "$id" "$Subnet"
     done
   fi
 }
@@ -512,6 +502,7 @@ case ${1} in
     create)
       create "$@"
       ;;
+
     *)
       echo "Please use $(basename "$BASH_SOURCE") configure or $(basename "$BASH_SOURCE") create"
       usage
