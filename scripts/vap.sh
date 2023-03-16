@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OPENSTACK="/opt/jelastic-python311/bin/openstack"
+OPENSTACK="/opt/jelastic-python311/bin/openstack --insecure"
 
 SUCCESS_CODE=0
 VALIDATION_ERROR_CODE=100
