@@ -426,7 +426,7 @@ create(){
 
   source ${VAP_ENVS}
   IMAGE=$(_getValueById $IMAGE "Name" "images.json")
-  SUBNET=$(_getValueById $SUBNET "Name" "subnets.json")
+  SUBNET=$(_getValueById $SUBNET "Subnet" "subnets.json")
   INFRA_FLAVOR=$(_getValueById $INFRA_FLAVOR "Name" "infraFlavors.json")
   USER_FLAVOR=$(_getValueById $USER_FLAVOR "Name" "userFlavors.json")
 
